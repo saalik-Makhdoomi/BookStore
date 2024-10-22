@@ -9,4 +9,4 @@ const conn = async () => {
     console.log("error while connecting to the db", error);
   }
 };
-conn();
+conn();   //database connection call

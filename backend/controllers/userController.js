@@ -101,17 +101,68 @@ const userLoginController = async (req, res) => {
 
 
 // get user-information:
-const userInformation = async (req, res) => {
+const userInformationController = async (req, res) => {
     try {
-        const { id } = req.headers;
-        const data = await user.findById(id).select('-password');
+      const userId = req.user._id;  // Extract userId from the decoded token in req.user
+      const data = await user.findById(userId).select('-password');  // Fetch user data, exclude password
         return res.status(200).json(data);
         
         
     } catch (error) {
         res.status(500).json({ message: "Internal server error"});
     }
+};
+
+//Edit User:
+const userEditController = async (req, res) => {
+  try {
+    const { username, email, password, address} = req.body;
+    const userId = req.user._id;
+
+    // Fetch user by userId:
+    const findUser = await user.findById(userId);
+    if(!findUser) {
+      return res.status(400).json({ message : "User not Found" });
+    }
+
+      // Hash password only if it's provided in the update
+      let hashPass;
+      if (password) {
+        hashPass = await bcrypt.hash(password, 10);
+        if (!hashPass) {
+          return res
+            .status(500)
+            .json({ message: "Error while hashing the new password!" });
+        }
+      }
+      
+      const updateUser = await user.findByIdAndUpdate(userId,{
+                // Fallback Logic: Here, I used username || findUser.username, which means if username is not provided (undefined), it will retain the existing value from findUser.username. This prevents overwriting existing fields with undefined.
+                username: username || findUser.username, // Use existing value if not provided
+                password: hashPass || findUser.password, // Update password only if a new one is provided
+                email: email || findUser.email,
+                address: address || findUser.address,
+        
+      },
+    { new: true, runValidators: true } // Return the updated document and validate fields
+  );
+
+  if (!updateUser) {
+    return res
+      .status(500)
+      .json({ message: "Error while updating user details!" });
+  }
+
+  return res
+  .status(200)
+  .json({ message: "User Details Updated Successfully!" });
+  
+  } catch (error) {
+    console.log("Error while updating details", error);
+    return res.status(500).json({ message: "Internal Server Error!" });
+  }
 }
 
 
-module.exports = { userSignupController, userLoginController,  userInformation };
+
+module.exports = { userSignupController, userLoginController,  userInformationController, userEditController};

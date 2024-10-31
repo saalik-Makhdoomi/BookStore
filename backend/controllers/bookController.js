@@ -52,15 +52,59 @@ try {
 
 const deleteBookController = async (req, res) => {
 try {
-    
+    const { bookid } = req.headers;
+    await books.findByIdAndDelete(bookid);
+    return res.status(200).json({ message: "Book Deleted Successfully"})
 
-
-
-    
 } catch (error) {
-    console.log("Error while deleting", error);
     return res.status(500).json({ message: "Error while deleting!" });
 }
 };
 
-module.exports = { addBookController, updateBookController, deleteBookController};
+const getAllBooksController = async (req, res) => {
+try {
+    const allbooks = await books.find().sort( { createdAt: -1 });
+
+
+    // calculate the books count:
+    const bookCount = allbooks.length;
+    if(bookCount === 0){
+        return res.status(404).json({ message: "No Books Avaliable"})
+    }
+
+
+    return res.status(200).json({ message: "Books Fetched Successfully", bookCount, allbooks});
+
+} catch (error) {
+    return res.status(500).json({ message: "Error while getting All Books!" });
+}
+};
+
+const getRecentBooksController = async (req, res) => {
+try {
+    const recentBooks = await books.find().sort({ createdAt: -1 }).limit(4);
+    return res.status(200).json({ message: "Books Fetched Successfully", recentBooks});
+
+} catch (error) {
+    return res.status(500).json({ message: "Error While fetching RecentBooks"});
+}
+};
+
+const getBookByIDController = async (req, res) => {
+    try {
+        const { bookid } = req.params;
+        const Book = await books.findById(bookid);
+        
+        if (!Book) {
+            return res.status(404).json({ message: "Book not found" });
+        }
+
+        return res.status(200).json({ message: "Book fetched successfully", Book });
+    } catch (error) {
+        return res.status(500).json({ message: "An error occurred", error: error.message });
+    }
+};
+
+
+
+module.exports = { addBookController, updateBookController, deleteBookController, getAllBooksController, getRecentBooksController, getBookByIDController};

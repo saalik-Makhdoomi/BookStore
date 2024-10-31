@@ -11,6 +11,10 @@ app.use(express.json());
 const userRoute = require("./routes/userRoute");
 app.use("/user", userRoute);
 
+// Book Routes:
+const bookRoute = require("./routes/bookRoute");
+app.use("/book", bookRoute);
+
 
 
 
